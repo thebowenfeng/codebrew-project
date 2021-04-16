@@ -21,6 +21,12 @@ events_user = db.Table('events_user',
     db.Column('user_id', db.Integer, db.ForeignKey('users.id'))
 )
 
+suburbs_org = db.Table('suburbs_org',
+    db.Column('suburb_id', db.Integer, db.ForeignKey('suburbs.id')),
+    db.Column('org_id', db.Integer, db.ForeignKey('organisation.id')),
+)
+
+
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(100), nullable=False)
@@ -31,19 +37,33 @@ class Users(db.Model):
     age = db.Column(db.Integer, nullable=True)
     addr = db.Column(db.String(100), nullable=True)
     suburb = db.relationship('Suburbs', secondary=suburbs_user, backref=db.backref('users', lazy='dynamic'))
-    attendees = db.relationship('Events', secondary=events_user, backref=db.backref('attendees', lazy='dynamic'))
+    attended = db.relationship('Events', secondary=events_user, backref=db.backref('attendees', lazy='dynamic'))
+
+
+class Organisation(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    username = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
+    suburb = db.relationship('Suburbs', secondary=suburbs_org, backref=db.backref('organisations', lazy='dynamic'))
+    events = db.relationship('Events', backref='organisation')
 
 
 class Events(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    b_name = db.Column(db.String(1000), nullable=False)
+    org_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))
+    event_name = db.Column(db.String(1000), nullable=False)
     suburb = db.Column(db.String(1000), nullable=False)
-    dt = db.Column(db.DateTime, nullable=False)
+    dt_begin = db.Column(db.DateTime, nullable=False)
+    dt_end = db.Column(db.DateTime, nullable=True)
+    addr = db.Column(db.String(100), nullable=False)
+    desc = db.Column(db.String(10000), nullable=False)
 
 
 class Suburbs(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+    postcode = db.Column(db.Integer, nullable=False)
 
 
 @app.route("/", methods=["GET"])
