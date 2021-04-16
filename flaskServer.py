@@ -70,5 +70,19 @@ class Suburbs(db.Model):
 def index():
     return "test"
 
+
+# not sure if done correctly. For now it checks with database and then adds user data to session for front end
+@app.route("/user_login", methods=["POST"])
+def user_login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        user = Users.query.filter_by(username=username).first()  # might have issues with username that doesnt exist
+        if user.password == password:
+            session['user_data'] = user
+        else:
+            return 'Username or Password did not match'
+
+
 if __name__ == "__main__":
     app.run(debug=True)
