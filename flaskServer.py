@@ -1,16 +1,46 @@
-# This is a sample Python script.
+from flask import Flask, request, jsonify, session
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
+app = Flask(__name__)
 
+database_uri = "sqlite:///users.db"
+#We need multiple databases
+binds = {
+    'forum_db' : 'sqlite:///forum.db',
+}
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
+app.config["SQLALCHEMY_BINDS"] = binds
+db = SQLAlchemy(app)
+app.secret_key = "bruh"
+#app.permanent_session_lifetime = timedelta(minutes=100) Optional maximum log in time before auto logging out
 
+class Users(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(100), nullable=False)
+    password = db.Column(db.String(100), nullable=False)
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+    def __repr__(self):
+        return f"ID: {self.id} username: {self.username} password: {self.password}"
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+class Forum(db.Model):
+    __bind_key__ = 'forum_db'
+
+    id = db.Column(db.Integer, primary_key=True)
+    type = db.Column(db.String(100), nullable=False)
+    longitude = db.Column(db.Float, nullable=False)
+    latitude = db.Column(db.Float, nullable=False)
+    datetime = db.Column(db.DateTime, nullable=False, default=datetime.utcnow)
+    banner_url = db.Column(db.String(100), nullable=False)
+    title = db.Column(db.String(1000), nullable=False)
+    body = db.Column(db.String(10000), nullable=False)
+    tag = db.Column(db.String(1000), nullable=False)
+
+@app.route("/", methods=["GET"])
+def index():
+    #db.create_all(bind="forum_db") Used to create databases
+    return "test"
+
+if __name__ == "__main__":
+    app.run(debug=True)
