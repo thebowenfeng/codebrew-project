@@ -4,7 +4,6 @@
 
 ##### Users 
 
-- attended (List of events the user has attended)
 - suburb (A singular ```Suburbs``` Object)
 - suburb_id (ID of the user's suburb)
 - attended (A list of ```Events``` object)
