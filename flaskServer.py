@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify, url_for, Response
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from geopy.geocoders import Nominatim
@@ -97,6 +97,8 @@ def index():
 @app.route("/user_login", methods=["GET", "POST"])
 def user_login():
     if request.method == 'POST':
+        resp = Response()
+        resp.headers['Access-Control-Allow-Origin'] = '*'
         response = {}
         username = request.form['username']
         password = request.form['password']
@@ -115,10 +117,12 @@ def user_login():
                 elif user.type == 'mentor':
                     response["address"] = user.addr
                     response["age"] = user.age
-                return jsonify(response)
+                resp.get_json(jsonify(response))
+                return resp
 
         response["status"] = "failure"
-        return jsonify(response)
+        resp.get_json(jsonify(response))
+        return resp
     else:
         return "Error: unsupported request method"
 
