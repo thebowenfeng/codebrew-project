@@ -260,4 +260,38 @@ logged in with the Google URL, their latest event will be automatically added to
 - `completed` Boolean on whether the event has been completed or not
 
 **Example** `{event_id: 1, org_id: 1, event_name: "Test", begin: :"01/01/21 10:11:12", end: "01/02/21 13:14:15", address: "24 Batman Rd", description: "Test", completed: False}`
-    
+
+## Paypal integration
+
+Simply put the following script (which will generate paypal buttons) into the website
+
+```  <script
+    src="https://www.paypal.com/sdk/js?client-id=Ab-TmVOOF38HXqyvqZN8T5pvj_mgN5WYSW2RE7kbwLoFFYqVB18CF7bMrWtZAjp-8IzZnYUsx2VELDBf"> // Required. Replace YOUR_CLIENT_ID with your sandbox client ID.
+  </script>
+  <script>
+    paypal.Buttons({
+    createOrder: function(data, actions) {
+      // This function sets up the details of the transaction, including the amount and line item details.
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: '100'
+          }
+        }]
+      });
+    },
+    onApprove: function(data, actions) {
+      // This function captures the funds from the transaction.
+      return actions.order.capture().then(function(details) {
+        // This function shows a transaction success message to your buyer.
+        alert('Transaction completed by ' + details.payer.name.given_name);
+      });
+    }
+  }).render('body');
+  </script>
+```
+Currently paypal would only work within a "sandbox environment". Meaning, transactions are tot real
+and only dummy accounts can be used. Details of the dummy account (used for demo purposes)
+
+- Email: sb-r4y6p5950974@personal.example.com
+- Password: o0zy%Zu9
