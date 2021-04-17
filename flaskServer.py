@@ -15,12 +15,12 @@ from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
-#app.config['CORS_HEADERS'] = 'Content-Type'
 database_uri = "sqlite:///database.db"
 session = []
 usrname = ""
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
+app.config['CORS_HEADERS'] = 'Content-Type'
 db = SQLAlchemy(app)
 app.secret_key = "bruh"
 #app.permanent_session_lifetime = timedelta(minutes=100) Optional maximum log in time before auto logging out
