@@ -458,6 +458,8 @@ def set_events():
                 chosen_org = random.choice(org_list)
                 chosen_org.isEvent = True
 
+            db.session.commit()
+
             response['status'] = 'success'
             return jsonify(response)
         else:
