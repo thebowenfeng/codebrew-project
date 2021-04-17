@@ -9,10 +9,12 @@ from paypalcheckoutsdk.core import PayPalHttpClient, SandboxEnvironment
 from paypalcheckoutsdk.orders import OrdersCreateRequest
 import random
 import os
+from flask_cors import CORS, cross_origin
 
 #request = OrdersCreateRequest()
 
 app = Flask(__name__)
+CORS(app)
 database_uri = "sqlite:///database.db"
 session = []
 usrname = ""
@@ -83,12 +85,12 @@ class Suburbs(db.Model):
 def georange(Suburb1, Postcode1, Suburb2, Postcode2):
     location1 = geolocator.geocode(f'{Suburb1} {Postcode1}')
     location2 = geolocator.geocode(f'{Suburb2} {Postcode2}')
-    return geodesic(location1, location2)
+    return geodesic((location1.latitude, location1.longitude), (location2.latitude, location2.longitude)).km
 
 
 def search_georange(location1, Suburb2, Postcode2):
     location2 = geolocator.geocode(f'{Suburb2} {Postcode2}')
-    return geodesic(location1, location2).km
+    return geodesic((location1.latitude, location1.longitude), (location2.latitude, location2.longitude)).km
 
 
 @app.route("/", methods=["GET"])
@@ -129,6 +131,7 @@ def index():
 
 
 @app.route("/user_login", methods=["GET", "POST"])
+@cross_origin()
 def user_login():
     if request.method == 'POST':
         response = {}
@@ -149,10 +152,14 @@ def user_login():
                 elif user.type == 'mentor':
                     response["address"] = user.addr
                     response["age"] = user.age
-                return jsonify(response)
+                new_response = jsonify(response)
+                new_response.headers.add("Access-Control-Allow-Origin", "*")
+                return new_response
 
         response["status"] = "failure"
-        return jsonify(response)
+        new_response = jsonify(response)
+        new_response.headers.add("Access-Control-Allow-Origin", "*")
+        return new_response
     else:
         return "Error: unsupported request method"
 
@@ -364,7 +371,7 @@ def create_event():
 
                     for volunteer in Users.query.all():
                         loc_range = georange(volunteer.suburb.name, volunteer.suburb.postcode, user.suburb.name, user.suburb.postcode)  # gets distance between user and event
-                        if volunteer.range <= loc_range:  # checks if within range
+                        if float(volunteer.range) <= float(loc_range):  # checks if within range
                             volunteers.append(volunteer)
 
                     if len(volunteers) > vol_num:
@@ -441,7 +448,7 @@ def update_user():
     else:
         return "Error: Unsupported request method"
 
-@app.route('/search', methods=['GET', 'POST'])  # NEEDS TESTING
+@app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
         response = {}
@@ -461,7 +468,7 @@ def search():
 
         for suburb in Suburbs.query.all():
             distance = search_georange(location, suburb.name, suburb.postcode)
-            if distance <= search_range:
+            if float(distance) <= float(search_range):
                 suburbs.append(suburb)
 
         for event in Events.query.filter_by(completed=False).all():
@@ -481,11 +488,11 @@ def search():
     else:
         return "Error: Unsupported request method"
 
-@app.route('/set_events', methods=['GET', 'POST']) # NEEDS TESTING
+@app.route('/set_events', methods=['GET', 'POST'])
 def set_events():
     if request.method == 'POST':
         response = {}
-        if request['token'] == 'bruh':  # potentially could make this a secret variable (if we want)
+        if request.form['token'] == 'bruh':  # potentially could make this a secret variable (if we want)
             for user in Organisation.query.all():
                 user.isEvent = False
 
@@ -493,6 +500,8 @@ def set_events():
                 org_list = suburb.orgs
                 chosen_org = random.choice(org_list)
                 chosen_org.isEvent = True
+
+            db.session.commit()
 
             response['status'] = 'success'
             return jsonify(response)
