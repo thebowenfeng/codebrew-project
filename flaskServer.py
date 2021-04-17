@@ -116,10 +116,14 @@ def user_login():
                 elif user.type == 'mentor':
                     response["address"] = user.addr
                     response["age"] = user.age
-                return jsonify(response)
+                new_response = jsonify(response)
+                new_response.headers.add("Access-Control-Allow-Origin", "*")
+                return new_response
 
         response["status"] = "failure"
-        return jsonify(response)
+        new_response = jsonify(response)
+        new_response.headers.add("Access-Control-Allow-Origin", "*")
+        return new_response
     else:
         return "Error: unsupported request method"
 
