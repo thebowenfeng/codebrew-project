@@ -10,6 +10,7 @@ app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
 db = SQLAlchemy(app)
 app.secret_key = "bruh"
 #app.permanent_session_lifetime = timedelta(minutes=100) Optional maximum log in time before auto logging out
+app.config.update(SESSION_COOKIE_SAMESITE="None", SESSION_COOKIE_SECURE=True)
 
 events_user = db.Table('events_user',
     db.Column('event_id', db.Integer, db.ForeignKey('events.id')),
@@ -62,18 +63,37 @@ class Suburbs(db.Model):
 def index():
     return "test"
 
-
-# not sure if done correctly. For now it checks with database and then adds user data to session for front end
-@app.route("/user_login", methods=["POST"])
+@app.route("/user_login", methods=["GET", "POST"])
 def user_login():
     if request.method == 'POST':
+        response = {}
         username = request.form['username']
         password = request.form['password']
-        user = Users.query.filter_by(username=username).first()  # might have issues with username that doesnt exist
-        if user.password == password:
-            session['user_data'] = user
-        else:
-            return 'Username or Password did not match'
+        for user in Users.query.all():
+            if user.username == username and user.password == password:
+                response["status"] = "success"
+                return jsonify(response)
+
+        response["status"] = "failure"
+        return jsonify(response)
+    else:
+        return "Error: unsupported request method"
+
+@app.route("/org_login", methods=["GET", "POST"])
+def org_login():
+    if request.method == 'POST':
+        response = {}
+        username = request.form['username']
+        password = request.form['password']
+        for user in Organisation.query.all():
+            if user.username == username and user.password == password:
+                response["status"] = "success"
+                return jsonify(response)
+
+        response["status"] = "failure"
+        return jsonify(response)
+    else:
+        return "Error: unsupported request method"
 
 
 if __name__ == "__main__":
