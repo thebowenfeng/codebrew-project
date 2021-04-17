@@ -36,10 +36,17 @@ strings.
 
 **Example**: ```{username: "test", password: "test"}```
 
-**Response format** JSON object with field ```status```. Will either be ```"success"``` or
-```"failure"``` depending on if the credentials are correct
+**Response format** JSON object with the following fields:
 
-**Example**: ```{status: "success"}```
+- ```status```. Will either be ```"success"``` or
+```"failure"``` depending on if the credentials are correct
+  
+- `postcode`. User's postcode 
+- `suburb`: User's suburb
+- `type`: User's account type (student/mentor)
+- `username`: User's username
+
+**Example**: ```{'postcode': 3053, 'status': 'success', 'suburb': 'Carlton', 'type': 'test', 'username': 'test'}```
 
 All other request methods (such as GET) will return a plaintext error message.
 
