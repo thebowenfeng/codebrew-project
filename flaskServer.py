@@ -33,6 +33,7 @@ class Users(db.Model):
     dt_start = db.Column(db.DateTime, nullable=True)
     dt_end = db.Column(db.DateTime, nullable=True)
     suburb_id = db.Column(db.Integer, db.ForeignKey("suburbs.id"))
+    user_range = db.Column(db.Integer, nullable=False)
     attended = db.relationship('Events', secondary=events_user, backref=db.backref('attendees', lazy='dynamic'))
 
 
@@ -130,6 +131,7 @@ def student_signup():
         yrlvl = int(request.form["yearlevel"])
         longtitude = request.form["long"]
         latitude = request.form["lat"]
+        user_range = request.form["range"]
 
         if username == "" or password == "":
             response["status"] = "failure"
@@ -159,7 +161,7 @@ def student_signup():
         else:
             this_suburb = Suburbs.query.filter_by(name=suburb).first()
 
-        this_user = Users(type = "student", username=username, password=password, hs=hs, yr_lvl=yrlvl, suburb=this_suburb)
+        this_user = Users(type = "student", username=username, password=password, hs=hs, yr_lvl=yrlvl, suburb=this_suburb, user_range=user_range)
         db.session.add(this_user)
         db.session.commit()
 
@@ -180,6 +182,7 @@ def mentor_signup():
         addr = request.form["address"]
         longtitude = request.form["long"]
         latitude = request.form["lat"]
+        user_range = request.form["range"]
 
         if username == "" or password == "":
             response["status"] = "failure"
@@ -208,7 +211,7 @@ def mentor_signup():
         else:
             this_suburb = Suburbs.query.filter_by(name=suburb).first()
 
-        this_user = Users(type = "mentor", username=username, password=password, age=age, addr=addr, suburb=this_suburb)
+        this_user = Users(type = "mentor", username=username, password=password, age=age, addr=addr, suburb=this_suburb, user_range=user_range)
         db.session.add(this_user)
         db.session.commit()
 
