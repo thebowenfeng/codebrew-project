@@ -81,12 +81,12 @@ class Suburbs(db.Model):
 def georange(Suburb1, Postcode1, Suburb2, Postcode2):
     location1 = geolocator.geocode(f'{Suburb1} {Postcode1}')
     location2 = geolocator.geocode(f'{Suburb2} {Postcode2}')
-    return geodesic(location1, location2)
+    return geodesic((location1.latitude, location1.longitude), (location2.latitude, location2.longitude)).km
 
 
 def search_georange(location1, Suburb2, Postcode2):
     location2 = geolocator.geocode(f'{Suburb2} {Postcode2}')
-    return geodesic(location1, location2).km
+    return geodesic((location1.latitude, location1.longitude), (location2.latitude, location2.longitude)).km
 
 
 @app.route("/", methods=["GET"])
@@ -330,7 +330,7 @@ def create_event():
 
                     for volunteer in Users.query.all():
                         loc_range = georange(volunteer.suburb.name, volunteer.suburb.postcode, user.suburb.name, user.suburb.postcode)  # gets distance between user and event
-                        if volunteer.range <= loc_range:  # checks if within range
+                        if float(volunteer.range) <= float(loc_range):  # checks if within range
                             volunteers.append(volunteer)
 
                     if len(volunteers) > vol_num:
@@ -407,7 +407,7 @@ def update_user():
     else:
         return "Error: Unsupported request method"
 
-@app.route('/search', methods=['GET', 'POST'])  # NEEDS TESTING
+@app.route('/search', methods=['GET', 'POST'])
 def search():
     if request.method == 'POST':
         response = {}
@@ -427,7 +427,7 @@ def search():
 
         for suburb in Suburbs.query.all():
             distance = search_georange(location, suburb.name, suburb.postcode)
-            if distance <= search_range:
+            if float(distance) <= float(search_range):
                 suburbs.append(suburb)
 
         for event in Events.query.filter_by(completed=False).all():
@@ -447,7 +447,7 @@ def search():
     else:
         return "Error: Unsupported request method"
 
-@app.route('/set_events', methods=['GET', 'POST']) # NEEDS TESTING
+@app.route('/set_events', methods=['GET', 'POST'])
 def set_events():
     if request.method == 'POST':
         response = {}
