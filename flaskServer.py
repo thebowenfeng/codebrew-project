@@ -65,6 +65,7 @@ class Suburbs(db.Model):
 def index():
     return "test"
 
+
 @app.route("/user_login", methods=["GET", "POST"])
 def user_login():
     if request.method == 'POST':
@@ -74,12 +75,23 @@ def user_login():
         for user in Users.query.all():
             if user.username == username and user.password == password:
                 response["status"] = "success"
+                response["username"] = user.username
+                response["type"] = user.type
+                response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
+                response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
+                if user.type == 'student':
+                    response["high_school"] = user.hs
+                    response["year_level"] = user.yr_lvl
+                elif user.type == 'mentor':
+                    response["address"] = user.addr
+                    response["age"] = user.age
                 return jsonify(response)
 
         response["status"] = "failure"
         return jsonify(response)
     else:
         return "Error: unsupported request method"
+
 
 @app.route("/org_login", methods=["GET", "POST"])
 def org_login():
@@ -90,12 +102,17 @@ def org_login():
         for user in Organisation.query.all():
             if user.username == username and user.password == password:
                 response["status"] = "success"
+                response["name"] = user.username
+                response["events"] = user.events  # might not work if there is none
+                response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
+                response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
                 return jsonify(response)
 
         response["status"] = "failure"
         return jsonify(response)
     else:
         return "Error: unsupported request method"
+
 
 @app.route("/student_signup", methods=["GET", "POST"])
 def student_signup():
@@ -146,6 +163,7 @@ def student_signup():
     else:
         return "Error: Unsupported request method"
 
+
 @app.route("/mentor_signup", methods=["GET", "POST"])
 def mentor_signup():
     if request.method == "POST":
@@ -166,7 +184,6 @@ def mentor_signup():
             response["status"] = "failure"
             response["error"] = "Duplicate username"
             return jsonify(response)
-
 
         long_lat = f"{latitude}, {longtitude}"
         try:
@@ -194,6 +211,7 @@ def mentor_signup():
 
     else:
         return "Error: Unsupported request method"
+
 
 @app.route("/org_signup", methods=["GET", "POST"])
 def org_signup():
