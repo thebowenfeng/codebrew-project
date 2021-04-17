@@ -20,6 +20,7 @@ events_user = db.Table('events_user',
 
 geolocator = Nominatim(user_agent="codebrew_project")
 
+
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(100), nullable=False)
@@ -42,13 +43,13 @@ class Organisation(db.Model):
     password = db.Column(db.String(100), nullable=False)
     suburb_id = db.Column(db.Integer, db.ForeignKey("suburbs.id"))
     events = db.relationship('Events', backref='organisation')
+    isEvent = db.Column(db.Boolean, nullable=False)  # says if organisation is making the next week event
 
 
 class Events(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    org_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))
+    org_id = db.Column(db.Integer, db.ForeignKey('organisation.id'))  # suburb info can be obtained from organisation
     event_name = db.Column(db.String(1000), nullable=False)
-    suburb = db.Column(db.String(1000), nullable=False)
     dt_begin = db.Column(db.DateTime, nullable=False)
     dt_end = db.Column(db.DateTime, nullable=True)
     addr = db.Column(db.String(100), nullable=False)
@@ -78,6 +79,7 @@ def user_login():
             if user.username == username and user.password == password:
                 response["status"] = "success"
                 response["username"] = user.username
+                response["password"] = user.password
                 response["type"] = user.type
                 response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
                 response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
@@ -104,7 +106,9 @@ def org_login():
         for user in Organisation.query.all():
             if user.username == username and user.password == password:
                 response["status"] = "success"
-                response["name"] = user.username
+                response["username"] = user.username
+                response["password"] = user.password
+                response["name"] = user.name
                 #response["events"] = user.events  # might not work if there is none
                 response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
                 response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
@@ -252,7 +256,7 @@ def org_signup():
         else:
             this_suburb = Suburbs.query.filter_by(name=suburb).first()
 
-        this_org = Organisation(name = name, username=username, password=password, suburb=this_suburb)
+        this_org = Organisation(name = name, username=username, password=password, suburb=this_suburb, isEvent=False)
         db.session.add(this_org)
         db.session.commit()
 
@@ -261,6 +265,47 @@ def org_signup():
 
     else:
         return "Error: Unsupported request method"
+
+
+# event will be created, where backend requests to create one for each suburb based on datetime (weekly etc.)
+# event will be pending
+@app.route("/create_event", methods=['GET', 'POST'])
+def create_event():
+    if request.method == 'POST':
+        response = {}
+        username = request.form['username']
+        password = request.form['password']
+        for user in Organisation.query.all():
+            if user.username == username and user.password == password:
+                if user.isEvent:
+                    name = request.form['event_name']
+                    begin = request.form['event_begin']
+
+                    if 'event_end' in request.form:
+                        end = request.form['event_end']
+                    else:
+                        end = None
+
+                    addr = request.form['address']
+                    desc = request.form['Description']
+
+                    new_event = Events(organisation=user, event_name=name, dt_begin=begin, dt_end=end, addr=addr, desc=desc)
+                    user.isEvent = False
+                    db.session.add(new_event)
+                    db.session.commit()
+
+                    response['status'] = 'success'
+                    return jsonify(response)
+                else:
+                    response['status'] = 'failure'
+                    response['error'] = 'Organisation is not eligible to create a new event this week'
+                    return jsonify(response)
+            else:
+                response['status'] = 'failure'
+                response['error'] = 'Issue with user information'
+                return jsonify(response)
+    else:
+        return "Error: unsupported request method"
 
 
 if __name__ == "__main__":
