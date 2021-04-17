@@ -7,7 +7,7 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
 import random
 import os
-from flask_cors import CORS
+import flask_cors
 
 app = Flask(__name__)
 CORS(app)
