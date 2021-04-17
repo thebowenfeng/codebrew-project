@@ -189,3 +189,74 @@ yearlevel:10, startdate:"01/01/21 10:11:12", enddate:"01/02/21 13:14:15", suburb
 
 **Example** `{'error': "Suburb doesn't exist", 'status': 'failure'}`
 
+## Searching for events
+
+**URL** `http://host_url/search` **Method** = POST
+
+**Request format**: JSON object with fields:
+
+- `address`
+- `range` Must be above 0 (in km)
+
+**Example**: `{address: "Melbourne", range: "30"}`
+
+**Response format**: JSON object with fields:
+
+- `status` Either success or failure
+- `error` Only when status is failure, always for when address is not valid
+- `events` List of all the events that fit the search
+
+## Setting up events for the week
+
+**URL** `http://host_url/set_events` **Method** = POST
+
+**Request format**: JSON object with fields:
+
+- `token` using the correct token to be able to set up the events
+
+**Response format**: JSON object with fields:
+
+- `status` Either success or failure
+- `error` Only when status is failure, always for when token isn't valid
+
+## Adding event to Google Calendar
+
+**URL** `http://host_url/calendar` **Method** = POST
+
+**Request format**: JSON object with `username` field. `username` would be the username of
+the currently logged in user. 
+
+**Example**: `{username: "test"}`
+
+**Response format**: `url` field which contains a URL the user needs to click. URL is a google login
+URL that basically gives my Google App permission to access user's google calendar via Calendar API.
+Front end needs to extract that url, and pop it in a new window or something. Once the user has
+logged in with the Google URL, their latest event will be automatically added to their calendar.
+
+**Example** `{url: "some_long_ass_url"}`
+
+## Getting an Event
+
+**URL** `http://host_url/get_event` **Method** = POST
+
+**Request format** : JSON Object with `event_id` field
+
+**Example**: `{event_id: 1}`
+
+**Response format** JSON object with the following fields:
+
+- ```status```. Will either be ```"success"``` or
+```"failure"``` depending on if the event_id is correct
+
+**IF it is success**
+
+- `event_id` ID of the event
+- `org_id` ID of the organisation
+- `event_name` Name of the event
+- `begin` DateTime of when the event begins
+- `end` DateTime of when the event ends (can be ```None```)
+- `address` String value of the address of the event
+- `description` Description of the event
+- `completed` Boolean on whether the event has been completed or not
+
+**Example** `{event_id: 1, org_id: 1, event_name: "Test", begin: :"01/01/21 10:11:12", end: "01/02/21 13:14:15", address: "24 Batman Rd", description: "Test", completed: False}`

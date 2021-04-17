@@ -1,5 +1,7 @@
 import requests
 from geopy.geocoders import Nominatim
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow
 
 geolocator = Nominatim(user_agent="codebrew_project")
 
@@ -29,6 +31,7 @@ while True:
         data["yearlevel"] = command[4]
         data["lat"] = command[5]
         data["long"] = command[6]
+        data["range"] = 10
         response = requests.post(url + "/student_signup", data)
         print(response.json())
     if command[0] == "mentorsignup":
@@ -58,4 +61,8 @@ while True:
         data["enddate"] = command[8] + " " + command[9]
         data["suburb"] = command[10]
         response = requests.post(url + "/update_user", data)
+        print(response.json())
+    if command[0] == "calendar":
+        data["username"] = command[1]
+        response = requests.post(url + "/calendar", data)
         print(response.json())

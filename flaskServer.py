@@ -1,12 +1,17 @@
-from flask import Flask, request, jsonify, session
+from flask import Flask, request, jsonify, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
+from googleapiclient.discovery import build
+from google_auth_oauthlib.flow import InstalledAppFlow, Flow
+import random
+import os
 
 app = Flask(__name__)
-
 database_uri = "sqlite:///database.db"
+session = []
+usrname = ""
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
 db = SQLAlchemy(app)
@@ -20,13 +25,15 @@ events_user = db.Table('events_user',
 )
 
 geolocator = Nominatim(user_agent="codebrew_project")
-
+scopes = ['https://www.googleapis.com/auth/calendar']
 
 class Users(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     type = db.Column(db.String(100), nullable=False)
     username = db.Column(db.String(100), nullable=False)
     password = db.Column(db.String(100), nullable=False)
+    firstname = db.Column(db.String(100), nullable=False)
+    surname = db.Column(db.String(100), nullable=False)
     hs = db.Column(db.String(100), nullable=True)
     yr_lvl = db.Column(db.Integer, nullable=True)
     age = db.Column(db.Integer, nullable=True)
@@ -56,7 +63,8 @@ class Events(db.Model):
     dt_end = db.Column(db.DateTime, nullable=True)
     addr = db.Column(db.String(100), nullable=False)
     desc = db.Column(db.String(10000), nullable=False)
-    Completed = db.Column(db.Boolean, nullable=False)
+    vol_num = db.Column(db.Integer, nullable=False)
+    completed = db.Column(db.Boolean, nullable=False)
 
 
 class Suburbs(db.Model):
@@ -142,6 +150,8 @@ def student_signup():
         response = {}
         username = request.form["username"]
         password = request.form["password"]
+        firstname = request.form["firstname"]
+        surname = request.form["surname"]
         hs = request.form["highschool"]
         yrlvl = int(request.form["yearlevel"])
         longtitude = request.form["long"]
@@ -176,7 +186,7 @@ def student_signup():
         else:
             this_suburb = Suburbs.query.filter_by(name=suburb).first()
 
-        this_user = Users(type = "student", username=username, password=password, hs=hs, yr_lvl=yrlvl, suburb=this_suburb, user_range=user_range)
+        this_user = Users(type = "student", username=username, password=password, firstname=firstname, surname=surname, hs=hs, yr_lvl=yrlvl, suburb=this_suburb, user_range=user_range)
         db.session.add(this_user)
         db.session.commit()
 
@@ -193,6 +203,8 @@ def mentor_signup():
         response = {}
         username = request.form["username"]
         password = request.form["password"]
+        firstname = request.form["firstname"]
+        surname = request.form["surname"]
         age = int(request.form["age"])
         addr = request.form["address"]
         longtitude = request.form["long"]
@@ -226,7 +238,7 @@ def mentor_signup():
         else:
             this_suburb = Suburbs.query.filter_by(name=suburb).first()
 
-        this_user = Users(type = "mentor", username=username, password=password, age=age, addr=addr, suburb=this_suburb, user_range=user_range)
+        this_user = Users(type = "mentor", username=username, password=password,firtname=firstname, surname=surname, age=age, addr=addr, suburb=this_suburb, user_range=user_range)
         db.session.add(this_user)
         db.session.commit()
 
@@ -285,8 +297,6 @@ def org_signup():
         return "Error: Unsupported request method"
 
 
-# event will be created, where backend requests to create one for each suburb based on datetime (weekly etc.)
-# event will be pending
 @app.route("/create_event", methods=['GET', 'POST'])
 def create_event():
     if request.method == 'POST':
@@ -297,20 +307,42 @@ def create_event():
             if user.username == username and user.password == password:
                 if user.isEvent:
                     name = request.form['event_name']
-                    begin = request.form['event_begin']
+                    begin = datetime.strptime(request.form["event_begin"], '%d/%m/%y %H:%M:%S')
 
                     if 'event_end' in request.form:
-                        end = request.form['event_end']
+                        end = datetime.strptime(request.form["event_end"], '%d/%m/%y %H:%M:%S')
                     else:
                         end = None
 
                     addr = request.form['address']
                     desc = request.form['description']
+                    vol_num = request.form['volunteer_num']
 
-                    new_event = Events(organisation=user, event_name=name, dt_begin=begin, dt_end=end, addr=addr, desc=desc, completed=False)
+                    new_event = Events(organisation=user, event_name=name, dt_begin=begin, dt_end=end, addr=addr, desc=desc, vol_num=vol_num, completed=False)
                     user.isEvent = False
                     db.session.add(new_event)
                     db.session.commit()
+
+                    # ----------------- ADDING USERS TO EVENT ------------------ #
+                    volunteers = []
+
+                    for volunteer in Users.query.all():
+                        loc_range = georange(volunteer.suburb.name, volunteer.suburb.postcode, user.suburb.name, user.suburb.postcode)  # gets distance between user and event
+                        if volunteer.range <= loc_range:  # checks if within range
+                            volunteers.append(volunteer)
+
+                    if len(volunteers) > vol_num:
+                        num1 = vol_num
+                    else:
+                        num1 = len(volunteers)
+
+                    while num1 > 0:
+                        volunteer = random.choice(volunteers)
+                        volunteer. attended.append(new_event)
+                        volunteers.remove(volunteer)
+                        num1 -= 1
+                    db.session.commit()
+                    # ----------------- ADDING USERS TO EVENT ------------------ #
 
                     response['status'] = 'success'
                     return jsonify(response)
@@ -373,19 +405,20 @@ def update_user():
     else:
         return "Error: Unsupported request method"
 
-
-@app.route('/search', methods=['GET', 'POST'])
+@app.route('/search', methods=['GET', 'POST'])  # NEEDS TESTING
 def search():
     if request.method == 'POST':
         response = {}
 
-        addr = request.get["address"]
-        search_range = request.get["range"]
+        addr = request.form["address"]
+        search_range = request.form["range"]
 
         try:
             location = geolocator.geocode(addr)
         except:
-            return 'Not a valid location'
+            response['status'] = 'failure'
+            response['error'] = 'Not a valid location'
+            return jsonify(response)
 
         events = []
         suburbs = []
@@ -395,12 +428,129 @@ def search():
             if distance <= search_range:
                 suburbs.append(suburb)
 
-        pass
+        for event in Events.query.filter_by(completed=False).all():
+            if Suburbs.query.get(event.organisation.suburb_id) in suburbs:
+                event_dict = {}
+                event_dict['event_id'] = event.id
+                event_dict['org_id'] = event.org_id
+                event_dict['event_name'] = event.event_name
+                event_dict['begin'] = event.dt_begin
+                event_dict['end'] = event.dt_end
+                event_dict['address'] = event.addr
+                events.append(jsonify(event_dict))
+
+        response['status'] = 'success'
+        response["events"] = events
+        return jsonify(response)
     else:
         return "Error: Unsupported request method"
 
-    return None
+@app.route('/set_events', methods=['GET', 'POST']) # NEEDS TESTING
+def set_events():
+    if request.method == 'POST':
+        response = {}
+        if request['token'] == 'bruh':  # potentially could make this a secret variable (if we want)
+            for user in Organisation.query.all():
+                user.isEvent = False
 
+            for suburb in Suburbs.query.all():
+                org_list = suburb.orgs
+                chosen_org = random.choice(org_list)
+                chosen_org.isEvent = True
+
+            response['status'] = 'success'
+            return jsonify(response)
+        else:
+            response['status'] = 'failure'
+            response['error'] = 'Not valid token'
+            return jsonify(response)
+    else:
+        return "Error: Unsupported request method"
+
+@app.route('/calendar', methods=["GET", "POST"])
+def calendar():
+    global session
+    global usrname
+    if request.method == "POST":
+        usrname = request.form["username"]
+
+        flow = InstalledAppFlow.from_client_secrets_file("client_secret.json", scopes=scopes)
+        flow.redirect_uri = url_for('calendar_callback', _external=True)
+        authorization_url, state = flow.authorization_url(access_type='offline', include_granted_scopes='true')
+        session.append(state)
+        return jsonify({"url" : authorization_url})
+    else:
+        return "Error: Unsupported request method"
+
+@app.route("/calendar_callback", methods=['GET', 'POST'])
+def calendar_callback():
+    global session
+    global usrname
+    if request.method == "GET":
+        state = session[0]
+        session = []
+        username = usrname
+
+        flow = Flow.from_client_secrets_file('client_secret.json', scopes=scopes, state=state)
+        flow.redirect_uri = url_for('calendar_callback', _external=True)
+        auth_response = request.url
+        flow.fetch_token(authorization_response=auth_response)
+
+        cred = flow.credentials
+
+        service = build("calendar", "v3", credentials=cred)
+
+        user = Users.query.filter_by(username=username).first()
+        event_obj = list(user.attended)[-1]
+
+        cal_event = {
+            'summary': event_obj.event_name,
+            'location': event_obj.addr,
+            'description': 'A chance to hear more about Google\'s developer products.',
+            'start': {
+                'dateTime': event_obj.dt_begin.strftime("%Y-%m-%dT%H:%M:%S"),
+                'timeZone': 'Australia/Melbourne',
+            },
+            'end': {
+                'dateTime': event_obj.dt_end.strftime("%Y-%m-%dT%H:%M:%S"),
+                'timeZone': 'Australia/Melbourne',
+            },
+            'reminders': {
+                'useDefault': True
+            },
+        }
+
+        event = service.events().insert(calendarId='primary', body=cal_event).execute()
+        print("Event created")
+
+        return "Success"
+    else:
+        return "Error: Unsupported request method"
+
+@app.route('/get_event', methods=['GET', 'POST'])
+def get_event():
+    if request.method == 'POST':
+        response = {}
+        event_id = request.form['event_id']
+        event = Events.query.get(event_id)
+        try:
+            response['event_id'] = event.id
+            response['org_id'] = event.org_id
+            response['event_name'] = event.event_name
+            response['begin'] = event.dt_begin
+            response['end'] = event.dt_end
+            response['address'] = event.addr
+            response['description'] = event.desc
+            response['completed'] = event.completed
+            return(jsonify(response))
+        except:
+            response['status'] = 'failure'
+            response['error'] = 'invalid event ID'
+            return jsonify(response)
+    else:
+        return "Error: Unsupported request method"
 
 if __name__ == "__main__":
+    os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
+
     app.run(debug=True)
