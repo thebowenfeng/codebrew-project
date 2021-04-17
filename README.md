@@ -41,12 +41,22 @@ strings.
 - ```status```. Will either be ```"success"``` or
 ```"failure"``` depending on if the credentials are correct
   
-- `postcode`. User's postcode 
+- `postcode`: User's postcode 
 - `suburb`: User's suburb
 - `type`: User's account type (student/mentor)
 - `username`: User's username
+- `password`: User's password
+- `range`: User's range
 
-**Example**: ```{'postcode': 3053, 'status': 'success', 'suburb': 'Carlton', 'type': 'test', 'username': 'test'}```
+**IF `type` = ```"student"```**
+- `high_school`: Student's High school
+- `year_level`: Student's year level
+
+**IF `type` = ```"mentor"```**
+- `address`: Mentor's address
+- `age`: Mentor's age
+
+**Example**: ```{'postcode': 3053, 'status': 'success', 'suburb': 'Carlton', 'type': 'test', 'username': 'test', 'password': 'test', 'high_school': 'test', 'year_level': 12}```
 
 All other request methods (such as GET) will return a plaintext error message.
 
@@ -70,8 +80,9 @@ Request and Response format same as **Users**. Refer to above.
 - `yearlevel`: Which year level, **must be digit(s)**
 - `lat`: Latitude of the current location of the user
 - `longitude`: Longitude of the current location of the user
+- `range`: Range (in km) that the user is willing to volunteer from his Suburb
 
-**Example**: `{username: "admin", password="admin", highschool:"example_hs", yearlevel:10, lat:-36.926079, long:174.727066}`
+**Example**: `{username: "admin", password="admin", highschool:"example_hs", yearlevel:10, lat:-36.926079, long:174.727066, range:10}`
 
 **Response format**: A success response will be: `{status:"success"}`. Failure conditions:
 
@@ -105,8 +116,9 @@ Mixing the 2 up will result in an incorrect suburb being assigned to the user.
 - `address`: Their address
 - `lat`: Latitude of the current location of the user
 - `longitude`: Longitude of the current location of the user
+- `range`: Range (in km) that the user is willing to volunteer from his Suburb
 
-**Example** `{username: "admin", password="admin", age:21, address:"10 abc St XYZ", lat:-36.926079, long:174.727066}`
+**Example** `{username: "admin", password="admin", age:21, address:"10 abc St XYZ", lat:-36.926079, long:174.727066, range:10}`
 
 **Response format** Exact same as student signup. Same failure conditions, please refer to above.
 
@@ -124,11 +136,56 @@ Mentor signup and student signup works in very similar fashion, just different U
 - `lat`: Latitude of the current location of the user
 - `longitude`: Longitude of the current location of the user
 
-**Example** `{name: "businessA", username: "admin", password="admin", lat:-36.926079, long:174.727066}`
+**Example** `{name: "businessA", username: "admin", password="admin", lat:-36.926079, long:174.727066, isEvent:False}`
 
 **Response format** Exact same as student/mentor signup. Same failure conditions, please refer to above.
 
 Organisation signup and student signup works in very similar fashion, just different URLs.
 
+## Creating an Event
 
+**URL** = `http://host_url/create_event` **Method** = POST
+
+**Request format**: JSON object with fields:
+
+- `username`: Username of selected Organisation
+- `password`: Password of selected Organisation
+- `event_name`: Name of the event
+- `event_begin`: DateTime of when the event starts
+- `event_end`: **Optional** DateTime of when the event ends
+- `address`: Address of the event as just a string
+- `description`: Description of the event
+
+**Example** `{username: "admin", password="admin", event_name: "Test", event_begin: 2021-04-17 16:39:56.964868, event_end: 2021-04-17 16:39:56.964868, address: '24 Batman Rd', description: 'Test'}`
+
+**Response format**: A success response will be: `{status:"success"}`. Failure conditions:
+
+- If the organisation is not eligible to host an event. `status` will be `"failure"` and `error` will be `"Organisation is not eligible to create a new event this week"`
+- The username and/or password don't match. `status` will be `"failure"` and `error` will be `"Issue with user information"`
+
+## Updating a user profile
+
+**URL** `http://host_url/update_user` **Method** = POST
+
+**Request format**: JSON object with fields:
+
+- `username`
+- `password` (Username and password must both be non-empty)
+- `address`
+- `highschool`
+- `yearlevel` Must be digits
+- `startdate` This must be in `dd/mm/yy hh:mm:ss` format
+- `enddate` This must be in `dd/mm/yy hh:mm:ss` format
+- `suburb` This is the name of the suburb
+- `postcode` This is the suburb postcode
+
+**Example**: `{username: "test", password:"test", address:"test st", highschool:"test", 
+yearlevel:10, startdate:"01/01/21 10:11:12", enddate:"01/02/21 13:14:15", suburb: "Carlton", postcode:3053}`
+
+**Response format**: JSON object with fields:
+
+- `status` Can either be success or failure. Failure will indicate something is wrong
+- `error` Will only appear if status is failure. 
+
+**Example** `{'error': "Suburb doesn't exist", 'status': 'failure'}`
 

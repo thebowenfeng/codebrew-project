@@ -48,3 +48,14 @@ while True:
         data["long"] = command[5]
         response = requests.post(url + "/org_signup", data)
         print(response.json())
+    if command[0] == "updateuser":
+        data["username"] = command[1]
+        data["password"] = command[2]
+        data["highschool"] = command[3]
+        data["yearlevel"] = command[4]
+        data["address"] = command[5]
+        data["startdate"] = command[6] + " " + command[7]
+        data["enddate"] = command[8] + " " + command[9]
+        data["suburb"] = command[10]
+        response = requests.post(url + "/update_user", data)
+        print(response.json())

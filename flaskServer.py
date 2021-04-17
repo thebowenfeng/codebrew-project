@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, session
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from geopy.geocoders import Nominatim
+from geopy.distance import geodesic
 
 app = Flask(__name__)
 
@@ -55,6 +56,7 @@ class Events(db.Model):
     dt_end = db.Column(db.DateTime, nullable=True)
     addr = db.Column(db.String(100), nullable=False)
     desc = db.Column(db.String(10000), nullable=False)
+    Completed = db.Column(db.Boolean, nullable=False)
 
 
 class Suburbs(db.Model):
@@ -63,6 +65,18 @@ class Suburbs(db.Model):
     postcode = db.Column(db.Integer, nullable=False)
     users = db.relationship("Users", backref="suburb")
     orgs = db.relationship("Organisation", backref="suburb")
+
+
+# Gets range in km between 2 suburbs
+def georange(Suburb1, Postcode1, Suburb2, Postcode2):
+    location1 = geolocator.geocode(f'{Suburb1} {Postcode1}')
+    location2 = geolocator.geocode(f'{Suburb2} {Postcode2}')
+    return geodesic(location1, location2)
+
+
+def search_georange(location1, Suburb2, Postcode2):
+    location2 = geolocator.geocode(f'{Suburb2} {Postcode2}')
+    return geodesic(location1, location2).km
 
 
 @app.route("/", methods=["GET"])
@@ -84,6 +98,7 @@ def user_login():
                 response["type"] = user.type
                 response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
                 response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
+                response["range"] = user.user_range
                 if user.type == 'student':
                     response["high_school"] = user.hs
                     response["year_level"] = user.yr_lvl
@@ -290,9 +305,9 @@ def create_event():
                         end = None
 
                     addr = request.form['address']
-                    desc = request.form['Description']
+                    desc = request.form['description']
 
-                    new_event = Events(organisation=user, event_name=name, dt_begin=begin, dt_end=end, addr=addr, desc=desc)
+                    new_event = Events(organisation=user, event_name=name, dt_begin=begin, dt_end=end, addr=addr, desc=desc, completed=False)
                     user.isEvent = False
                     db.session.add(new_event)
                     db.session.commit()
@@ -309,6 +324,82 @@ def create_event():
                 return jsonify(response)
     else:
         return "Error: unsupported request method"
+
+
+@app.route("/update_user", methods=["GET", "POST"])
+def update_user():
+    if request.method == "POST":
+        response = {}
+
+        username = request.form["username"]
+        password = request.form["password"]
+
+        if username == "" or password == "":
+            response["status"] = "failure"
+            response["error"] = "Empty fields"
+
+        addr = request.form["address"]
+        hs = request.form["highschool"]
+        yrlvl = request.form["yearlevel"]
+
+        dt_start = datetime.strptime(request.form["startdate"], '%d/%m/%y %H:%M:%S')
+        dt_end = datetime.strptime(request.form["enddate"], '%d/%m/%y %H:%M:%S')
+
+        if request.form["startdate"] == "":
+            dt_start = None
+        if request.form["enddate"] == "":
+            dt_end = None
+
+        suburb = request.form["suburb"] # CHECK IF A SUBURB EXISTS USING BOTH SUBURB AND POSTCODE
+        postcode = int(request.form["postcode"])
+
+        this_user = Users.query.filter_by(username=username).first()
+        this_user.username = username
+        this_user.password = password
+        this_user.addr = addr
+        this_user.hs = hs
+        this_user.yr_lvl = int(yrlvl)
+        this_user.dt_start = dt_start
+        this_user.dt_end = dt_end
+
+        for i in Suburbs.query.all():
+            if i.name == suburb and i.postcode == postcode:
+                this_user.suburb = i
+                break
+
+        db.session.commit()
+        response["status"] = "success"
+        return jsonify(response)
+    else:
+        return "Error: Unsupported request method"
+
+
+@app.route('/search', methods=['GET', 'POST'])
+def search():
+    if request.method == 'POST':
+        response = {}
+
+        addr = request.get["address"]
+        search_range = request.get["range"]
+
+        try:
+            location = geolocator.geocode(addr)
+        except:
+            return 'Not a valid location'
+
+        events = []
+        suburbs = []
+
+        for suburb in Suburbs.query.all():
+            distance = search_georange(location, suburb.name, suburb.postcode)
+            if distance <= search_range:
+                suburbs.append(suburb)
+
+        pass
+    else:
+        return "Error: Unsupported request method"
+
+    return None
 
 
 if __name__ == "__main__":
