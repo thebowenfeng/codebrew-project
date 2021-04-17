@@ -449,7 +449,7 @@ def search():
 def set_events():
     if request.method == 'POST':
         response = {}
-        if request['token'] == 'bruh':  # potentially could make this a secret variable (if we want)
+        if request.form['token'] == 'bruh':  # potentially could make this a secret variable (if we want)
             for user in Organisation.query.all():
                 user.isEvent = False
 
