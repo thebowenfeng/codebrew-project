@@ -7,8 +7,10 @@ from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
 import random
 import os
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 database_uri = "sqlite:///database.db"
 session = []
 usrname = ""
