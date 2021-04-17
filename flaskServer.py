@@ -14,7 +14,7 @@ from flask_cors import CORS, cross_origin
 #request = OrdersCreateRequest()
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r'/*' : {'origins': ['http://localhost:5000']}})
 database_uri = "sqlite:///database.db"
 session = []
 usrname = ""
