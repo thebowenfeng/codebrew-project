@@ -29,6 +29,8 @@ class Users(db.Model):
     yr_lvl = db.Column(db.Integer, nullable=True)
     age = db.Column(db.Integer, nullable=True)
     addr = db.Column(db.String(100), nullable=True)
+    dt_start = db.Column(db.DateTime, nullable=True)
+    dt_end = db.Column(db.DateTime, nullable=True)
     suburb_id = db.Column(db.Integer, db.ForeignKey("suburbs.id"))
     attended = db.relationship('Events', secondary=events_user, backref=db.backref('attendees', lazy='dynamic'))
 
@@ -103,7 +105,7 @@ def org_login():
             if user.username == username and user.password == password:
                 response["status"] = "success"
                 response["name"] = user.username
-                response["events"] = user.events  # might not work if there is none
+                #response["events"] = user.events  # might not work if there is none
                 response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
                 response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
                 return jsonify(response)
