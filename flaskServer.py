@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, url_for, Response
+from flask import Flask, request, jsonify, url_for
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from geopy.geocoders import Nominatim
@@ -95,33 +95,31 @@ def index():
 
 
 @app.route("/user_login", methods=["GET", "POST"])
+@cross_origin()
 def user_login():
     if request.method == 'POST':
-        resp = Response()
-        resp.headers['Access-Control-Allow-Origin'] = '*'
-        resp.headers["Access-Control-Allow-Methods"] = "OPTIONS, GET, POST, PUT, PATCH, DELETE, FETCH"
-        resp.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
+        response = {}
         username = request.form['username']
         password = request.form['password']
         for user in Users.query.all():
             if user.username == username and user.password == password:
-                resp.headers["status"] = "success"
-                resp.headers["username"] = user.username
-                resp.headers["password"] = user.password
-                resp.headers["type"] = user.type
-                resp.headers["suburb"] = (Suburbs.query.get(user.suburb_id)).name
-                resp.headers["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
-                resp.headers["range"] = user.user_range
+                response["status"] = "success"
+                response["username"] = user.username
+                response["password"] = user.password
+                response["type"] = user.type
+                response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
+                response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
+                response["range"] = user.user_range
                 if user.type == 'student':
-                    resp.headers["high_school"] = user.hs
-                    resp.headers["year_level"] = user.yr_lvl
+                    response["high_school"] = user.hs
+                    response["year_level"] = user.yr_lvl
                 elif user.type == 'mentor':
-                    resp.headers["address"] = user.addr
-                    respo.headers["age"] = user.age
-                return resp
+                    response["address"] = user.addr
+                    response["age"] = user.age
+                return jsonify(response)
 
-        resp.headers["status"] = "failure"
-        return resp
+        response["status"] = "failure"
+        return jsonify(response)
     else:
         return "Error: unsupported request method"
 
