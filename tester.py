@@ -31,3 +31,20 @@ while True:
         data["long"] = command[6]
         response = requests.post(url + "/student_signup", data)
         print(response.json())
+    if command[0] == "mentorsignup":
+        data["username"] = command[1]
+        data["password"] = command[2]
+        data["age"] = command[3]
+        data["address"] = command[4]
+        data["lat"] = command[5]
+        data["long"] = command[6]
+        response = requests.post(url + "/mentor_signup", data)
+        print(response.json())
+    if command[0] == "orgsignup":
+        data["name"] = command[1]
+        data["username"] = command[2]
+        data["password"] = command[3]
+        data["lat"] = command[4]
+        data["long"] = command[5]
+        response = requests.post(url + "/org_signup", data)
+        print(response.json())

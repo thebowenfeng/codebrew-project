@@ -86,6 +86,42 @@ will result in `{status: "failure" error:"Invalid location"}`
 Make sure the longtitude and latitude is stored correctly in `long` and `lat` respsectively. 
 Mixing the 2 up will result in an incorrect suburb being assigned to the user.
 
+### Mentors
+
+**URL** = `http://host_url/mentor_signup` **Method** = POST
+
+**Request format**: JSON object with fields:
+
+- `username`: Username
+- `password`: Password
+- `age`: Their age **must be digit(s)**
+- `address`: Their address
+- `lat`: Latitude of the current location of the user
+- `longitude`: Longitude of the current location of the user
+
+**Example** `{username: "admin", password="admin", age:21, address:"10 abc St XYZ", lat:-36.926079, long:174.727066}`
+
+**Response format** Exact same as student signup. Same failure conditions, please refer to above.
+
+Mentor signup and student signup works in very similar fashion, just different URLs.
+
+### Organisations
+
+**URL** = `http://host_url/org_signup` **Method** = POST
+
+**Request format**: JSON object with fields:
+
+- `name`: Name of the business
+- `username`: Username
+- `password`: Password
+- `lat`: Latitude of the current location of the user
+- `longitude`: Longitude of the current location of the user
+
+**Example** `{name: "businessA", username: "admin", password="admin", lat:-36.926079, long:174.727066}`
+
+**Response format** Exact same as student/mentor signup. Same failure conditions, please refer to above.
+
+Organisation signup and student signup works in very similar fashion, just different URLs.
 
 
 

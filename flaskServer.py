@@ -146,6 +146,102 @@ def student_signup():
     else:
         return "Error: Unsupported request method"
 
+@app.route("/mentor_signup", methods=["GET", "POST"])
+def mentor_signup():
+    if request.method == "POST":
+        response = {}
+        username = request.form["username"]
+        password = request.form["password"]
+        age = int(request.form["age"])
+        addr = request.form["address"]
+        longtitude = request.form["long"]
+        latitude = request.form["lat"]
+
+        if username == "" or password == "":
+            response["status"] = "failure"
+            response["error"] = "Empty fields"
+            return jsonify(response)
+
+        if Users.query.filter_by(username=username).first() != None:
+            response["status"] = "failure"
+            response["error"] = "Duplicate username"
+            return jsonify(response)
+
+
+        long_lat = f"{latitude}, {longtitude}"
+        try:
+            location = geolocator.reverse(long_lat)
+            suburb = location.raw["address"]["suburb"]
+            postcode = int(location.raw["address"]["postcode"])
+        except:
+            response["status"] = "failure"
+            response["error"] = "Invalid location"
+            return jsonify(response)
+
+        if Suburbs.query.filter_by(name=suburb).first() == None:
+            this_suburb = Suburbs(name=suburb, postcode=postcode)
+            db.session.add(this_suburb)
+            db.session.commit()
+        else:
+            this_suburb = Suburbs.query.filter_by(name=suburb).first()
+
+        this_user = Users(type = "mentor", username=username, password=password, age=age, addr=addr, suburb=this_suburb)
+        db.session.add(this_user)
+        db.session.commit()
+
+        response["status"] = "success"
+        return jsonify(response)
+
+    else:
+        return "Error: Unsupported request method"
+
+@app.route("/org_signup", methods=["GET", "POST"])
+def org_signup():
+    if request.method == "POST":
+        response = {}
+        name = request.form["name"]
+        username = request.form["username"]
+        password = request.form["password"]
+        longtitude = request.form["long"]
+        latitude = request.form["lat"]
+
+        if username == "" or password == "" or name == "":
+            response["status"] = "failure"
+            response["error"] = "Empty fields"
+            return jsonify(response)
+
+        if Organisation.query.filter_by(username=username).first() != None:
+            response["status"] = "failure"
+            response["error"] = "Duplicate username"
+            return jsonify(response)
+
+        long_lat = f"{latitude}, {longtitude}"
+        try:
+            location = geolocator.reverse(long_lat)
+            suburb = location.raw["address"]["suburb"]
+            postcode = int(location.raw["address"]["postcode"])
+        except:
+            response["status"] = "failure"
+            response["error"] = "Invalid location"
+            return jsonify(response)
+
+        if Suburbs.query.filter_by(name=suburb).first() == None:
+            this_suburb = Suburbs(name=suburb, postcode=postcode)
+            db.session.add(this_suburb)
+            db.session.commit()
+        else:
+            this_suburb = Suburbs.query.filter_by(name=suburb).first()
+
+        this_org = Organisation(name = name, username=username, password=password, suburb=this_suburb)
+        db.session.add(this_org)
+        db.session.commit()
+
+        response["status"] = "success"
+        return jsonify(response)
+
+    else:
+        return "Error: Unsupported request method"
+
 
 if __name__ == "__main__":
     app.run(debug=True)
