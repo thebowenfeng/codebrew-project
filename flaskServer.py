@@ -15,6 +15,10 @@ from flask_cors import CORS, cross_origin
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
+<<<<<<< HEAD
+=======
+#app.config['CORS_HEADERS'] = 'Content-Type'
+>>>>>>> 1b2f874548eb8bd655487e0c1ad16543d8f5d16e
 database_uri = "sqlite:///database.db"
 session = []
 usrname = ""
