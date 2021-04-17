@@ -99,29 +99,26 @@ def user_login():
     if request.method == 'POST':
         resp = Response()
         resp.headers['Access-Control-Allow-Origin'] = '*'
-        response = {}
         username = request.form['username']
         password = request.form['password']
         for user in Users.query.all():
             if user.username == username and user.password == password:
-                response["status"] = "success"
-                response["username"] = user.username
-                response["password"] = user.password
-                response["type"] = user.type
-                response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
-                response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
-                response["range"] = user.user_range
+                resp.headers["status"] = "success"
+                resp.headers["username"] = user.username
+                resp.headers["password"] = user.password
+                resp.headers["type"] = user.type
+                resp.headers["suburb"] = (Suburbs.query.get(user.suburb_id)).name
+                resp.headers["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
+                resp.headers["range"] = user.user_range
                 if user.type == 'student':
-                    response["high_school"] = user.hs
-                    response["year_level"] = user.yr_lvl
+                    resp.headers["high_school"] = user.hs
+                    resp.headers["year_level"] = user.yr_lvl
                 elif user.type == 'mentor':
-                    response["address"] = user.addr
-                    response["age"] = user.age
-                resp.get_json(jsonify(response))
+                    resp.headers["address"] = user.addr
+                    respo.headers["age"] = user.age
                 return resp
 
-        response["status"] = "failure"
-        resp.get_json(jsonify(response))
+        resp.headers["status"] = "failure"
         return resp
     else:
         return "Error: unsupported request method"
