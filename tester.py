@@ -1,7 +1,5 @@
 import requests
 from geopy.geocoders import Nominatim
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
 
 geolocator = Nominatim(user_agent="codebrew_project")
 

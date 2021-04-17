@@ -5,9 +5,13 @@ from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
+from paypalcheckoutsdk.core import PayPalHttpClient, SandboxEnvironment
+from paypalcheckoutsdk.orders import OrdersCreateRequest
 import random
 import os
 from flask_cors import CORS, cross_origin
+
+#request = OrdersCreateRequest()
 
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
@@ -92,7 +96,39 @@ def search_georange(location1, Suburb2, Postcode2):
 
 @app.route("/", methods=["GET"])
 def index():
-    return "test"
+    return """<!DOCTYPE html>
+
+<head>
+  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Ensures optimal rendering on mobile devices. -->
+  <meta http-equiv="X-UA-Compatible" content="IE=edge" /> <!-- Optimal Internet Explorer compatibility -->
+</head>
+
+<body>
+  <script
+    src="https://www.paypal.com/sdk/js?client-id=Ab-TmVOOF38HXqyvqZN8T5pvj_mgN5WYSW2RE7kbwLoFFYqVB18CF7bMrWtZAjp-8IzZnYUsx2VELDBf"> // Required. Replace YOUR_CLIENT_ID with your sandbox client ID.
+  </script>
+  <script>
+    paypal.Buttons({
+    createOrder: function(data, actions) {
+      // This function sets up the details of the transaction, including the amount and line item details.
+      return actions.order.create({
+        purchase_units: [{
+          amount: {
+            value: '100'
+          }
+        }]
+      });
+    },
+    onApprove: function(data, actions) {
+      // This function captures the funds from the transaction.
+      return actions.order.capture().then(function(details) {
+        // This function shows a transaction success message to your buyer.
+        alert('Transaction completed by ' + details.payer.name.given_name);
+      });
+    }
+  }).render('body');
+  </script>
+</body>"""
 
 
 @app.route("/user_login", methods=["GET", "POST"])
