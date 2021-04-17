@@ -99,6 +99,8 @@ def user_login():
     if request.method == 'POST':
         resp = Response()
         resp.headers['Access-Control-Allow-Origin'] = '*'
+        resp.headers["Access-Control-Allow-Methods"] = "OPTIONS, GET, POST, PUT, PATCH, DELETE, FETCH"
+        resp.headers['Access-Control-Allow-Headers'] = "Content-Type, Authorization"
         username = request.form['username']
         password = request.form['password']
         for user in Users.query.all():
