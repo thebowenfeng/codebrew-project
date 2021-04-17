@@ -260,3 +260,4 @@ logged in with the Google URL, their latest event will be automatically added to
 - `completed` Boolean on whether the event has been completed or not
 
 **Example** `{event_id: 1, org_id: 1, event_name: "Test", begin: :"01/01/21 10:11:12", end: "01/02/21 13:14:15", address: "24 Batman Rd", description: "Test", completed: False}`
+    
