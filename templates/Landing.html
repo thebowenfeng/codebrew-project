@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html style="font-size: 16px;">
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta charset="utf-8">
+    <meta name="keywords" content="">
+    <meta name="description" content="">
+    <meta name="page_type" content="np-template-header-footer-from-plugin">
+    <title>Landing</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='nicepage.css') }}" media="screen">
+<link rel="stylesheet" href="{{ url_for('static', filename='Landing.css') }}" media="screen">
+    <script class="u-script" type="text/javascript" src="{{ url_for('static', filename='jquery.js') }}" defer=""></script>
+    <script class="u-script" type="text/javascript" src="{{ url_for('static', filename='nicepage.js') }}" defer=""></script>
+    <meta name="generator" content="Nicepage 3.12.1, nicepage.com">
+    <link id="u-theme-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i">
+    <link id="u-page-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Lato:100,100i,300,300i,400,400i,700,700i,900,900i|Lato:100,100i,300,300i,400,400i,700,700i,900,900i">
+    
+    
+    <script type="application/ld+json">{
+		"@context": "http://schema.org",
+		"@type": "Organization",
+		"name": "Meal Quest",
+		"url": "index.html"
+}</script>
+    <meta property="og:title" content="Landing">
+    <meta property="og:type" content="website">
+    <meta name="theme-color" content="#478ac9">
+    <link rel="canonical" href="index.html">
+    <meta property="og:url" content="index.html">
+  </head>
+  <body class="u-body">
+    <section class="u-clearfix u-section-1" id="sec-9c10">
+      <div class="u-clearfix u-expanded-width u-layout-wrap u-layout-wrap-1">
+        <div class="u-layout">
+          <div class="u-layout-row">
+            <div class="u-container-style u-custom-color-4 u-layout-cell u-size-30 u-layout-cell-1">
+              <div class="u-container-layout u-container-layout-1">
+                <img src="{{ url_for('static', filename='/images/MealQuest.png') }}" alt="" class="u-image u-image-default u-image-1" data-image-width="932" data-image-height="343">
+                <p class="u-custom-font u-text u-text-custom-color-3 u-text-1">A NEW WAY TO ORGANIZE AND MAKE A DIFFERENCE</p>
+                <h3 class="u-custom-font u-font-lato u-text u-text-custom-color-3 u-text-2">Connecting&nbsp;volunteers&nbsp;and&nbsp;businesses<br>to&nbsp;help&nbsp;food-insecure&nbsp;Australians.
+                </h3>
+                <p class="u-custom-font u-text u-text-body-alt-color u-text-3">22%&nbsp;of&nbsp;food insecure&nbsp;Australians&nbsp;had&nbsp;not&nbsp;gone&nbsp;hungry&nbsp;before&nbsp;the<br>pandemic.&nbsp;15%&nbsp;of&nbsp;Australians&nbsp;have&nbsp;experienced&nbsp;food&nbsp;insecurity<br>in&nbsp;the&nbsp;past&nbsp;year.
+                </p>
+                <p class="u-custom-font u-text u-text-body-alt-color u-text-4">Help&nbsp;out&nbsp;your&nbsp;community&nbsp;by&nbsp;donating,&nbsp;volunteering&nbsp;or&nbsp;offering&nbsp;the&nbsp;<br>help&nbsp;of&nbsp;your&nbsp;business!
+                </p>
+                  <form method = "post" action=".">
+                      <button type ="submit" class="u-btn u-btn-round u-button-style u-custom-color-3 u-hover-palette-1-light-1 u-radius-6 u-btn-1" name="button" value="help">Help other business</button>
+                        <button type ="submit" class="u-btn u-btn-round u-button-style u-custom-color-3 u-hover-palette-1-light-1 u-radius-6 u-btn-1" name="button" value="volunteer">Volunteer</button>
+                      <h3 class="u-custom-font u-font-lato u-text u-text-custom-color-3 u-text-2">Donate</h3>
+                        <script
+                            src="https://www.paypal.com/sdk/js?client-id=Ab-TmVOOF38HXqyvqZN8T5pvj_mgN5WYSW2RE7kbwLoFFYqVB18CF7bMrWtZAjp-8IzZnYUsx2VELDBf">
+                          </script>
+
+                          <div id="paypal-button-container" style="padding-top: 15px; max-width: 300px; padding-left: 50px;"></div>
+
+                          <script>
+                            paypal.Buttons({
+                                createOrder: function(data, actions) {
+                                  // This function sets up the details of the transaction, including the amount and line item details.
+                                  return actions.order.create({
+                                    purchase_units: [{
+                                      amount: {
+                                        value: '100'
+                                      }
+                                    }]
+                                  });
+                                },
+                                onApprove: function(data, actions) {
+                                  // This function captures the funds from the transaction.
+                                  return actions.order.capture().then(function(details) {
+                                    // This function shows a transaction success message to your buyer.
+                                    alert('Thank you ' + details.payer.name.given_name + ' for your generous donation of $100!');
+                                  });
+                                }
+                              }).render('#paypal-button-container');
+                              //This function displays Smart Payment Buttons on your web page.
+                          </script>
+
+                  </form>
+              </div>
+            </div>
+            <div class="u-container-style u-image u-layout-cell u-size-30 u-image-2" data-image-width="5472" data-image-height="3648">
+              <div class="u-container-layout u-container-layout-2"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    
+    
+  </body>
+</html>

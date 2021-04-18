@@ -1,26 +1,20 @@
-from flask import Flask, request, jsonify, url_for
+from flask import Flask, request, jsonify, url_for, session, render_template, redirect
 from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime
 from geopy.geocoders import Nominatim
 from geopy.distance import geodesic
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow, Flow
-from paypalcheckoutsdk.core import PayPalHttpClient, SandboxEnvironment
-from paypalcheckoutsdk.orders import OrdersCreateRequest
 import random
 import os
-from flask_cors import CORS, cross_origin
 
 #request = OrdersCreateRequest()
 
 app = Flask(__name__)
-CORS(app, resources={r'/*' : {'origins': ['http://localhost:3000']}})
 database_uri = "sqlite:///database.db"
-session = []
 usrname = ""
 
 app.config["SQLALCHEMY_DATABASE_URI"] = database_uri
-app.config['CORS_HEADERS'] = 'Content-Type'
 db = SQLAlchemy(app)
 app.secret_key = "bruh"
 #app.permanent_session_lifetime = timedelta(minutes=100) Optional maximum log in time before auto logging out
@@ -94,99 +88,185 @@ def search_georange(location1, Suburb2, Postcode2):
     return geodesic((location1.latitude, location1.longitude), (location2.latitude, location2.longitude)).km
 
 
-@app.route("/", methods=["GET"])
+@app.route("/", methods=["GET", "POST"])
 def index():
-    return """<!DOCTYPE html>
-
-<head>
-  <meta name="viewport" content="width=device-width, initial-scale=1"> <!-- Ensures optimal rendering on mobile devices. -->
-  <meta http-equiv="X-UA-Compatible" content="IE=edge" /> <!-- Optimal Internet Explorer compatibility -->
-</head>
-
-<body>
-  <script
-    src="https://www.paypal.com/sdk/js?client-id=Ab-TmVOOF38HXqyvqZN8T5pvj_mgN5WYSW2RE7kbwLoFFYqVB18CF7bMrWtZAjp-8IzZnYUsx2VELDBf"> // Required. Replace YOUR_CLIENT_ID with your sandbox client ID.
-  </script>
-  <script>
-    paypal.Buttons({
-    createOrder: function(data, actions) {
-      // This function sets up the details of the transaction, including the amount and line item details.
-      return actions.order.create({
-        purchase_units: [{
-          amount: {
-            value: '100'
-          }
-        }]
-      });
-    },
-    onApprove: function(data, actions) {
-      // This function captures the funds from the transaction.
-      return actions.order.capture().then(function(details) {
-        // This function shows a transaction success message to your buyer.
-        alert('Transaction completed by ' + details.payer.name.given_name);
-      });
-    }
-  }).render('body');
-  </script>
-</body>"""
+    if request.method == "POST":
+        if request.form["button"] == "donate":
+            return redirect("/donate")
+        elif request.form["button"] == "volunteer":
+            return redirect("/user_login")
+        elif request.form["button"] == "help":
+            return redirect("/help_business")
+    else:
+        return render_template("Landing.html")
 
 
 @app.route("/user_login", methods=["GET", "POST"])
-@cross_origin()
 def user_login():
+    fail = False
     if request.method == 'POST':
-        response = {}
         username = request.form['username']
         password = request.form['password']
-        for user in Users.query.all():
-            if user.username == username and user.password == password:
-                response["status"] = "success"
-                response["username"] = user.username
-                response["password"] = user.password
-                response["type"] = user.type
-                response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
-                response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
-                response["range"] = user.user_range
-                if user.type == 'student':
-                    response["high_school"] = user.hs
-                    response["year_level"] = user.yr_lvl
-                elif user.type == 'mentor':
-                    response["address"] = user.addr
-                    response["age"] = user.age
-                new_response = jsonify(response)
-                new_response.headers.add("Access-Control-Allow-Origin", "*")
-                return new_response
 
-        response["status"] = "failure"
-        new_response = jsonify(response)
-        new_response.headers.add("Access-Control-Allow-Origin", "*")
-        return new_response
+        if request.form["button"] == "login":
+            if request.form["select type"] == "Student":
+                for user in Users.query.all():
+                    if user.username == username and user.password == password:
+                        session["user"] = username
+                        return redirect("/profile_student")
+                fail = True
+                return render_template("Login.html", fail = fail)
+            elif request.form["select type"] == "Mentor":
+                for user in Users.query.all():
+                    if user.username == username and user.password == password:
+                        session["user"] = username
+                        return redirect("/profile_mentor")
+                fail = True
+                return render_template("Login.html", fail = fail)
+            elif request.form["select type"] == "Organisation":
+                for user in Organisation.query.all():
+                    if user.username == username and user.password == password:
+                        session["user"] = username
+                        return redirect("/profile_org")
+                fail = True
+                return render_template("Login.html", fail = fail)
     else:
-        return "Error: unsupported request method"
+        return render_template("Login.html", fail = fail)
 
+@app.route("/profile_student", methods=["GET", "POST"])
+def profile_student():
+    if request.method == "POST":
+        if request.form["button"] == "update":
+            user_suburb = request.form["suburb"]
+            user_postcode = request.form["postcode"]
+            user = Users.query.filter_by(username=session["user"]).first()
 
-@app.route("/org_login", methods=["GET", "POST"])
-def org_login():
-    if request.method == 'POST':
-        response = {}
-        username = request.form['username']
-        password = request.form['password']
-        for user in Organisation.query.all():
-            if user.username == username and user.password == password:
-                response["status"] = "success"
-                response["username"] = user.username
-                response["password"] = user.password
-                response["name"] = user.name
-                #response["events"] = user.events  # might not work if there is none
-                response["suburb"] = (Suburbs.query.get(user.suburb_id)).name
-                response["postcode"] = (Suburbs.query.get(user.suburb_id)).postcode
-                return jsonify(response)
+            location1 = geolocator.geocode(f'{user_suburb} {user_postcode}')
+            if location1 != None:
+                user.firstname = request.form["firstname"]
+                user.surname = request.form["surname"]
+                user.address = request.form["address"]
+                user.age = int(request.form["age"]) if request.form["age"] != "None" else None
+                user.user_range = int(request.form["range"])
+                user.dt_start = datetime.strptime(request.form["date_start"], '%Y-%m-%d')
+                user.dt_end = datetime.strptime(request.form["date_end"], '%Y-%m-%d')
 
-        response["status"] = "failure"
-        return jsonify(response)
+                found = False
+                for sub in Suburbs.query.filter_by(name=user_suburb).all():
+                    if sub.postcode == int(user_postcode):
+                        user.suburb = sub
+                        db.session.commit()
+                        found = True
+                        break
+                if not found:
+                    new_sub = Suburbs(name=user_suburb, postcode=int(user_postcode))
+                    db.session.add(new_sub)
+                    user.suburb = new_sub
+                    db.session.commit()
+            else:
+                suburb = user.suburb
+                return render_template("Profile.html", fn = user.firstname, ln = user.surname, yrlvl = user.yr_lvl, hs = user.hs, sub = suburb.name, pstcode = suburb.postcode, range=user.user_range, dtstart = user.dt_start.strftime("%Y-%m-%d") if user.dt_start != None else None, dtend = user.dt_end.strftime("%Y-%m-%d") if user.dt_end != None else None, error=True)
+
+            return redirect("/profile_student")
+
+        elif request.form["button"] == "logout":
+            session.pop("user", None)
+            return redirect("/")
     else:
-        return "Error: unsupported request method"
+        if "user" in session:
+            user = Users.query.filter_by(username=session["user"]).first()
+            suburb = user.suburb
+            return render_template("Profile.html", fn = user.firstname, ln = user.surname, yrlvl = user.yr_lvl, hs = user.hs, sub = suburb.name, pstcode = suburb.postcode, range=user.user_range, dtstart = user.dt_start.strftime("%Y-%m-%d") if user.dt_start != None else None, dtend = user.dt_end.strftime("%Y-%m-%d") if user.dt_end != None else None, error=False)
+        else:
+            return redirect("/user_login")
 
+@app.route("/profile_mentor", methods=["GET", "POST"])
+def profile_mentor():
+    if request.method == "POST":
+        if request.form["button"] == "update":
+            user_suburb = request.form["suburb"]
+            user_postcode = request.form["postcode"]
+            user = Users.query.filter_by(username=session["user"]).first()
+
+            location1 = geolocator.geocode(f'{user_suburb} {user_postcode}')
+            if location1 != None:
+                user.firstname = request.form["firstname"]
+                user.surname = request.form["surname"]
+                user.addr = request.form["address"]
+                user.age = int(request.form["age"]) if request.form["age"] != "None" else None
+                user.user_range = int(request.form["range"])
+                user.dt_start = datetime.strptime(request.form["date_start"], '%Y-%m-%d')
+                user.dt_end = datetime.strptime(request.form["date_end"], '%Y-%m-%d')
+
+                found = False
+                for sub in Suburbs.query.filter_by(name=user_suburb).all():
+                    if sub.postcode == int(user_postcode):
+                        user.suburb = sub
+                        db.session.commit()
+                        found = True
+                        break
+                if not found:
+                    new_sub = Suburbs(name=user_suburb, postcode=int(user_postcode))
+                    db.session.add(new_sub)
+                    user.suburb = new_sub
+                    db.session.commit()
+            else:
+                suburb = user.suburb
+                return render_template("Profile_Mentor.html", fn = user.firstname, ln = user.surname, age = user.age, addr = user.addr, sub = suburb.name, pstcode = suburb.postcode, range=user.user_range, dtstart = user.dt_start.strftime("%Y-%m-%d") if user.dt_start != None else None, dtend = user.dt_end.strftime("%Y-%m-%d") if user.dt_end != None else None, error=True)
+
+            return redirect("/profile_mentor")
+
+        elif request.form["button"] == "logout":
+            session.pop("user", None)
+            return redirect("/")
+    else:
+        if "user" in session:
+            user = Users.query.filter_by(username=session["user"]).first()
+            suburb = user.suburb
+            return render_template("Profile_Mentor.html", fn = user.firstname, ln = user.surname, age = user.age, addr = user.addr, sub = suburb.name, pstcode = suburb.postcode, range=user.user_range, dtstart = user.dt_start.strftime("%Y-%m-%d") if user.dt_start != None else None, dtend = user.dt_end.strftime("%Y-%m-%d") if user.dt_end != None else None, error=False)
+        else:
+            return redirect("/user_login")
+
+@app.route("/profile_org", methods=["GET", "POST"])
+def profile_org():
+    if request.method == "POST":
+        if request.form["button"] == "update":
+            user_suburb = request.form["suburb"]
+            user_postcode = request.form["postcode"]
+            user = Organisation.query.filter_by(username=session["user"]).first()
+
+            location1 = geolocator.geocode(f'{user_suburb} {user_postcode}')
+            if location1 != None:
+                user.name = request.form["name"]
+
+                found = False
+                for sub in Suburbs.query.filter_by(name=user_suburb).all():
+                    if sub.postcode == int(user_postcode):
+                        user.suburb = sub
+                        db.session.commit()
+                        found = True
+                        break
+                if not found:
+                    new_sub = Suburbs(name=user_suburb, postcode=int(user_postcode))
+                    db.session.add(new_sub)
+                    user.suburb = new_sub
+                    db.session.commit()
+            else:
+                suburb = user.suburb
+                return render_template("Profile_Org.html", name = user.name, sub = suburb.name, postcode = suburb.postcode, error=True)
+
+            return redirect("/profile_org")
+
+        elif request.form["button"] == "logout":
+            session.pop("user", None)
+            return redirect("/")
+    else:
+        if "user" in session:
+            user = Organisation.query.filter_by(username=session["user"]).first()
+            suburb = user.suburb
+            return render_template("Profile_Org.html", name=user.name, sub = suburb.name, postcode = suburb.postcode, error=False)
+        else:
+            return redirect("/user_login")
 
 @app.route("/student_signup", methods=["GET", "POST"])
 def student_signup():
