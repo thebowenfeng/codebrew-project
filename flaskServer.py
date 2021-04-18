@@ -105,6 +105,7 @@ def index():
 def user_login():
     fail = False
     if request.method == 'POST':
+        #print(request.form)
         username = request.form['username']
         password = request.form['password']
 
@@ -130,6 +131,9 @@ def user_login():
                         return redirect("/profile_org")
                 fail = True
                 return render_template("Login.html", fail = fail)
+
+        elif request.form["button"] == "signup":
+            return redirect("/signup")
     else:
         return render_template("Login.html", fail = fail)
 
@@ -281,6 +285,7 @@ def profile_org():
         else:
             return redirect("/user_login")
 
+'''
 @app.route("/student_signup", methods=["GET", "POST"])
 def student_signup():
     if request.method == "POST":
@@ -432,7 +437,9 @@ def org_signup():
 
     else:
         return "Error: Unsupported request method"
+'''
 
+'''
 
 @app.route("/create_event", methods=['GET', 'POST'])
 def create_event():
@@ -542,6 +549,8 @@ def update_user():
     else:
         return "Error: Unsupported request method"
 
+'''
+
 @app.route('/search', methods=["GET", "POST"])
 def get_search():
     if request.method == "POST":
@@ -615,7 +624,17 @@ def get_search():
     else:
         return render_template("Search.html", events=[])
 
+@app.route("/signup", methods=["GET", "POST"])
+def signup():
+    if request.method == "POST":
+        pass
+    else:
+        if "user" in session:
+            return redirect("/")
+        else:
+            return render_template("Sign-Up.html")
 
+'''
 @app.route('/set_events', methods=['GET', 'POST'])
 def set_events():
     if request.method == 'POST':
@@ -639,7 +658,9 @@ def set_events():
             return jsonify(response)
     else:
         return "Error: Unsupported request method"
+'''
 
+'''
 @app.route('/calendar', methods=["GET", "POST"])
 def calendar():
     global session
@@ -699,7 +720,9 @@ def calendar_callback():
         return "Success"
     else:
         return "Error: Unsupported request method"
+'''
 
+'''
 @app.route('/get_event', methods=['GET', 'POST'])
 def get_event():
     if request.method == 'POST':
@@ -722,7 +745,7 @@ def get_event():
             return jsonify(response)
     else:
         return "Error: Unsupported request method"
-
+'''
 if __name__ == "__main__":
     os.environ['OAUTHLIB_INSECURE_TRANSPORT'] = '1'
 
