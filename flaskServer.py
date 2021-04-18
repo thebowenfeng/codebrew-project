@@ -95,10 +95,19 @@ def index():
             return redirect("/donate")
         elif request.form["button"] == "volunteer":
             return redirect("/user_login")
-        elif request.form["button"] == "help":
-            return redirect("/help_business")
+        elif request.form["button"] == "about":
+            return redirect("/about")
     else:
         return render_template("Landing.html")
+
+
+@app.route("/about", methods=['GET', 'POST'])
+def about():
+    if request.method == 'POST':
+        if request.form["button"] == "home":
+            return redirect('/')
+    else:
+        return render_template("About.html")
 
 
 @app.route("/user_login", methods=["GET", "POST"])
@@ -149,8 +158,8 @@ def profile_student():
             if location1 != None:
                 user.firstname = request.form["firstname"]
                 user.surname = request.form["surname"]
-                user.address = request.form["address"]
-                user.age = int(request.form["age"]) if request.form["age"] != "None" else None
+                user.hs = request.form["highschool"]
+                user.yr_lvl = int(request.form["yr_lvl"]) if request.form["yr_lvl"] != "None" else None
                 user.user_range = int(request.form["range"])
                 user.dt_start = datetime.strptime(request.form["date_start"], '%Y-%m-%d')
                 user.dt_end = datetime.strptime(request.form["date_end"], '%Y-%m-%d')

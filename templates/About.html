@@ -7,10 +7,10 @@
     <meta name="description" content="">
     <meta name="page_type" content="np-template-header-footer-from-plugin">
     <title>About</title>
-    <link rel="stylesheet" href="nicepage.css" media="screen">
-<link rel="stylesheet" href="About.css" media="screen">
-    <script class="u-script" type="text/javascript" src="jquery.js" defer=""></script>
-    <script class="u-script" type="text/javascript" src="nicepage.js" defer=""></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='nicepage.css') }}" media="screen">
+<link rel="stylesheet" href="{{ url_for('static', filename='About.css') }}" media="screen">
+    <script class="u-script" type="text/javascript" src="{{ url_for('static', filename='jquery.js') }}" defer=""></script>
+    <script class="u-script" type="text/javascript" src="{{ url_for('static', filename='nicepage.js') }}" defer=""></script>
     <meta name="generator" content="Nicepage 3.12.1, nicepage.com">
     
     <link id="u-theme-google-font" rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:100,100i,300,300i,400,400i,500,500i,700,700i,900,900i|Open+Sans:300,300i,400,400i,600,600i,700,700i,800,800i">
@@ -36,7 +36,7 @@
   <body class="u-body u-custom-color-1">
     <section class="u-clearfix u-custom-color-1 u-section-1" id="sec-c787">
       <div class="u-clearfix u-sheet u-sheet-1">
-        <img src="images/MealQuest.png" alt="" class="u-image u-image-default u-image-1" data-image-width="932" data-image-height="343" data-href="//">
+        <img src="{{ url_for('static', filename='/images/MealQuest.png') }}" alt="" class="u-image u-image-default u-image-1" data-image-width="932" data-image-height="343" data-href="//">
         <h5 class="u-align-center u-custom-font u-font-lato u-text u-text-custom-color-2 u-text-1"> Through the use of a responsive web app, we aim to create a network
       
       
@@ -56,7 +56,7 @@
     <section class="u-clearfix u-section-2" id="sec-5fc3">
       <div class="u-clearfix u-sheet u-sheet-1">
         <h3 class="u-align-center u-custom-font u-font-lato u-text u-text-custom-color-3 u-text-default u-text-1">How does MealQuest work?</h3>
-        <img src="images/img2.png" alt="" class="u-image u-image-default u-image-1" data-image-width="794" data-image-height="1600">
+        <img src="{{ url_for('static', filename='/images/img2.png') }}" alt="" class="u-image u-image-default u-image-1" data-image-width="794" data-image-height="1600">
       </div>
     </section>
     <section class="u-align-center u-clearfix u-section-3" id="sec-0cdb">
@@ -125,7 +125,7 @@
                   <p class="u-text u-text-3">Encourage businesses in your area to become a MealQuest host, tell your friends to join as volunteers, and help bring in more mentors for your community!<br>
                     <br>MealQuest's aim is to <b>help out your community. </b>That's why we run on <b>donations only</b>.&nbsp; No ads, complete privacy for its users, and no paid downloads.
                   </p>
-                  <a href="https://nicepage.com/k/projects-website-templates" class="u-btn u-btn-round u-button-style u-custom-color-3 u-custom-font u-font-lato u-hover-palette-1-light-1 u-radius-10 u-btn-1">DONATE</a>
+                  <a href="/" class="u-btn u-btn-round u-button-style u-custom-color-3 u-custom-font u-font-lato u-hover-palette-1-light-1 u-radius-10 u-btn-1">GO HOME TO DONATE</a>
                 </div>
               </div>
               <div class="u-align-center u-container-style u-image u-layout-cell u-right-cell u-size-30 u-size-xs-60 u-image-1" src="" data-image-width="5472" data-image-height="3648">
@@ -135,20 +135,6 @@
           </div>
         </div>
       </div>
-    </section>
-    
-    
-    
-    <section class="u-backlink u-clearfix u-grey-80">
-      <a class="u-link" href="https://nicepage.com/website-templates" target="_blank">
-        <span>Website Templates</span>
-      </a>
-      <p class="u-text">
-        <span>created with</span>
-      </p>
-      <a class="u-link" href="https://nicepage.com/" target="_blank">
-        <span>Website Builder Software</span>
-      </a>. 
     </section>
   </body>
 </html>
