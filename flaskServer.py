@@ -636,74 +636,85 @@ def get_search():
 @app.route("/signup", methods=["GET", "POST"])
 def signup():
     if request.method == "POST":
-        username = request.form["username"]
-        password = request.form["password"]
-        firstname = request.form["firstname"]
-        surname = request.form["surname"]
-        b_name = request.form["name"]
-        highschool = request.form["hs"]
-        yearlevel = int(request.form["yr_lvl"])
-        age = int(request.form["age"])
-        address = request.form["addr"]
-        suburb = request.form["suburb"]
-        postcode = int(request.form["postcode"])
+        if request.form['button'] == 'signup':
+            username = request.form["username"]
+            password = request.form["password"]
 
-        if request.name["select type"] == "Student":
-            new_student = Users(type="student", username=username, password=password, firstname= firstname, surname = surname, hs = highschool, yr_lvl = yearlevel, user_range=10)
+            if request.form["select type"] == "Student":
+                firstname = request.form["firstname"]
+                surname = request.form["surname"]
+                highschool = request.form["hs"]
+                yearlevel = int(request.form["yr_lvl"])
+                suburb = request.form["suburb"]
+                postcode = int(request.form["postcode"])
 
-            newSuburb = True
-            for sub in Suburbs.query.filter_by(name = suburb).all():
-                if sub.postcode == postcode and sub.name == suburb:
+                new_student = Users(type="student", username=username, password=password, firstname= firstname, surname = surname, hs = highschool, yr_lvl = yearlevel, user_range=10)
+
+                newSuburb = True
+                for sub in Suburbs.query.filter_by(name = suburb).all():
+                    if sub.postcode == postcode and sub.name == suburb:
+                        new_student.suburb = sub
+                        newSuburb = False
+                        break
+
+                if newSuburb:
+                    sub = Suburbs(name=suburb, postcode=postcode)
+                    db.session.add(sub)
                     new_student.suburb = sub
-                    newSuburb = False
-                    break
 
-            if newSuburb:
-                sub = Suburbs(name=suburb, postcode=postcode)
-                db.session.add(sub)
-                new_student.suburb = sub
+                db.session.add(new_student)
+                db.session.commit()
 
-            db.session.add(new_student)
-            db.session.commit()
+            elif request.form["select type"] == "Mentor":
+                firstname = request.form["firstname"]
+                surname = request.form["surname"]
+                b_name = request.form["name"]
+                age = int(request.form["age"])
+                address = request.form["addr"]
+                suburb = request.form["suburb"]
+                postcode = int(request.form["postcode"])
 
-        elif request.name["select type"] == "Mentor":
-            new_mentor = Users(type="student", username=username, password=password, firstname=firstname,
-                                surname=surname, age=age, addr=address, user_range=10)
+                new_mentor = Users(type="student", username=username, password=password, firstname=firstname,
+                                    surname=surname, age=age, addr=address, user_range=10)
 
-            newSuburb = True
-            for sub in Suburbs.query.filter_by(name=suburb).all():
-                if sub.postcode == postcode and sub.name == suburb:
+                newSuburb = True
+                for sub in Suburbs.query.filter_by(name=suburb).all():
+                    if sub.postcode == postcode and sub.name == suburb:
+                        new_mentor.suburb = sub
+                        newSuburb = False
+                        break
+
+                if newSuburb:
+                    sub = Suburbs(name=suburb, postcode=postcode)
+                    db.session.add(sub)
                     new_mentor.suburb = sub
-                    newSuburb = False
-                    break
 
-            if newSuburb:
-                sub = Suburbs(name=suburb, postcode=postcode)
-                db.session.add(sub)
-                new_mentor.suburb = sub
+                db.session.add(new_mentor)
+                db.session.commit()
 
-            db.session.add(new_mentor)
-            db.session.commit()
+            elif request.form["select type"] == "Organisation":
+                b_name = request.form["name"]
+                suburb = request.form["suburb"]
+                postcode = int(request.form["postcode"])
 
-        elif request.name["select type"] == "Organisation":
-            new_org = Organisation(name=b_name, username=username, password=password, isEvent=False)
+                new_org = Organisation(name=b_name, username=username, password=password, isEvent=False)
 
-            newSuburb = True
-            for sub in Suburbs.query.filter_by(name=suburb).all():
-                if sub.postcode == postcode and sub.name == suburb:
+                newSuburb = True
+                for sub in Suburbs.query.filter_by(name=suburb).all():
+                    if sub.postcode == postcode and sub.name == suburb:
+                        new_org.suburb = sub
+                        newSuburb = False
+                        break
+
+                if newSuburb:
+                    sub = Suburbs(name=suburb, postcode=postcode)
+                    db.session.add(sub)
                     new_org.suburb = sub
-                    newSuburb = False
-                    break
 
-            if newSuburb:
-                sub = Suburbs(name=suburb, postcode=postcode)
-                db.session.add(sub)
-                new_org.suburb = sub
+                db.session.add(new_org)
+                db.session.commit()
 
-            db.session.add(new_org)
-            db.session.commit()
-
-        return redirect("/user_login")
+            return redirect("/user_login")
 
     else:
         if "user" in session:
