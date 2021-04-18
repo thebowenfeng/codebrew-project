@@ -172,6 +172,11 @@ def profile_student():
         elif request.form["button"] == "logout":
             session.pop("user", None)
             return redirect("/")
+        elif request.form["button"] == "search":
+            return redirect("/search")
+        elif request.form["button"] == "home":
+            return redirect('/')
+
     else:
         if "user" in session:
             user = Users.query.filter_by(username=session["user"]).first()
@@ -219,6 +224,10 @@ def profile_mentor():
         elif request.form["button"] == "logout":
             session.pop("user", None)
             return redirect("/")
+        elif request.form["button"] == "search":
+            return redirect("/search")
+        elif request.form["button"] == "home":
+            return redirect('/')
     else:
         if "user" in session:
             user = Users.query.filter_by(username=session["user"]).first()
@@ -260,6 +269,10 @@ def profile_org():
         elif request.form["button"] == "logout":
             session.pop("user", None)
             return redirect("/")
+        elif request.form["button"] == "search":
+            return redirect("/search")
+        elif request.form["button"] == "home":
+            return redirect('/')
     else:
         if "user" in session:
             user = Organisation.query.filter_by(username=session["user"]).first()
@@ -529,27 +542,24 @@ def update_user():
     else:
         return "Error: Unsupported request method"
 
-@app.route('/search', methods=['GET', 'POST'])
-def search():
-    if request.method == 'POST':
-        response = {}
+@app.route('/search/<string:query>', methods=['GET'])
+def search(query):
+    # 127.0.0.1:5000/show_search/searched_item
+    if query == None:
+        return render_template("Search.html", events={})
+    else:
+        search_range = 15.0
 
-        addr = request.form["address"]
-        search_range = request.form["range"]
-
-        try:
-            location = geolocator.geocode(addr)
-        except:
-            response['status'] = 'failure'
-            response['error'] = 'Not a valid location'
-            return jsonify(response)
+        location = geolocator.geocode(query)
+        if location == None:
+            return render_template("Search.html", error='Not a valid location')
 
         events = []
         suburbs = []
 
         for suburb in Suburbs.query.all():
             distance = search_georange(location, suburb.name, suburb.postcode)
-            if float(distance) <= float(search_range):
+            if float(distance) <= search_range:
                 suburbs.append(suburb)
 
         for event in Events.query.filter_by(completed=False).all():
@@ -561,13 +571,8 @@ def search():
                 event_dict['begin'] = event.dt_begin
                 event_dict['end'] = event.dt_end
                 event_dict['address'] = event.addr
-                events.append(jsonify(event_dict))
-
-        response['status'] = 'success'
-        response["events"] = events
-        return jsonify(response)
-    else:
-        return "Error: Unsupported request method"
+                events.append(event_dict)
+        return render_template("Search.html", events=events)
 
 @app.route('/set_events', methods=['GET', 'POST'])
 def set_events():
