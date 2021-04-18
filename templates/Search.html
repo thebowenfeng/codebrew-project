@@ -30,11 +30,14 @@
     <meta property="og:url" content="index.html">
   </head>
   <body class="u-body"><header class="u-align-center-xs u-clearfix u-custom-color-1 u-header u-header" id="sec-8fba"><div class="u-clearfix u-sheet u-sheet-1">
+      {% if success == True %}
+      <script>alert("Successfully added event to calendar!")</script>
+      {% endif %}
         <form action="#" method="POST" style="float: left;">
           <button type = "submit" name = "button" value = "home" class="u-btn u-btn-submit u-button-style u-custom-color-2 u-custom-font u-font-lato u-hover-custom-color-3 u-text-hover-white u-btn-1">Home<br>
           </button>
         </form>
-        <form action="#" class="u-border-3 u-border-custom-color-2 u-custom-color-4 u-expanded-width u-input-round u-radius-14 u-search u-search-right u-search-1">
+        <form action="/search" method="POST" class="u-border-3 u-border-custom-color-2 u-custom-color-4 u-expanded-width u-input-round u-radius-14 u-search u-search-right u-search-1">
           <button class="u-search-button" type="submit">
             <span class="u-search-icon u-spacing-10 u-text-custom-color-2">
               <svg class="u-svg-link" preserveAspectRatio="xMidYMin slice" viewBox="0 0 56.966 56.966" style=""><use xmlns:xlink="http://www.w3.org/1999/xlink" xlink:href="#svg-b04b"></use></svg>
@@ -52,9 +55,12 @@
             {% for event in events %}
                 <div class="u-align-center u-container-style u-custom-color-1 u-expanded-width u-group u-radius-50 u-shape-round u-group-2">
                   <div class="u-container-layout u-container-layout-2">
-                    <h1 class="u-custom-font u-font-lato u-text u-text-custom-color-5 u-text-1">{{event["event_name"}}</h1>
-                    <p class="u-custom-font u-font-lato u-text u-text-2">{{event["begin"]}} {{event["end"]}} {{event["addr"]}}</p>
-                    <a href="" class="u-btn u-btn-round u-button-style u-color-scheme-summer-time u-color-style-multicolor-1 u-custom-color-5 u-custom-font u-font-lato u-radius-50 u-btn-1">Learn more</a>
+                    <h1 class="u-custom-font u-font-lato u-text u-text-custom-color-5 u-text-1">{{event["event_name"]}}</h1>
+                    <p class="u-custom-font u-font-lato u-text u-text-2">{{event["begin"]}} - {{event["end"]}}  <br>  {{event["address"]}} <br> {{event["desc"]}} <br> Hosted by {{event["org"]}}</p>
+                      <form action="/search" method="post">
+                          <button type = "submit" name = "calendar" value = "{{event['event_id']}}" class="u-btn u-btn-submit u-button-style u-custom-color-2 u-custom-font u-font-lato u-hover-custom-color-3 u-text-hover-white u-btn-1">Add to Calendar<br>
+                    </button>
+                      </form>
                   </div>
                 </div>
             {% endfor %}

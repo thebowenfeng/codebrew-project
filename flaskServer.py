@@ -542,37 +542,79 @@ def update_user():
     else:
         return "Error: Unsupported request method"
 
-@app.route('/search/<string:query>', methods=['GET'])
-def search(query):
-    # 127.0.0.1:5000/show_search/searched_item
-    if query == None:
-        return render_template("Search.html", events={})
+@app.route('/search', methods=["GET", "POST"])
+def get_search():
+    if request.method == "POST":
+        success = False
+        if "calendar" in request.form:
+            event_id = int(request.form["calendar"])
+            this_event = Events.query.get(event_id)
+
+            flow = InstalledAppFlow.from_client_secrets_file('client_secret.json', scopes=scopes)
+
+            cred = flow.run_local_server()
+            #(cred)
+            service = build("calendar", "v3", credentials=cred)
+
+            event_obj = this_event
+
+            cal_event = {
+                'summary': event_obj.event_name,
+                'location': event_obj.addr,
+                'description': event_obj.desc,
+                'start': {
+                    'dateTime': event_obj.dt_begin.strftime("%Y-%m-%dT%H:%M:%S"),
+                    'timeZone': 'Australia/Melbourne',
+                },
+                'end': {
+                    'dateTime': event_obj.dt_end.strftime("%Y-%m-%dT%H:%M:%S"),
+                    'timeZone': 'Australia/Melbourne',
+                },
+                'reminders': {
+                    'useDefault': True
+                },
+            }
+
+            event = service.events().insert(calendarId='primary', body=cal_event).execute()
+            if event != None:
+                success = True
+
+            return render_template("Search.html", success=success, events=[])
+        else:
+            query = request.form["search"]
+            if query == None:
+                return render_template("Search.html", events=[])
+            else:
+                search_range = 15.0
+
+                location = geolocator.geocode(query)
+                if location == None:
+                    return render_template("Search.html", error='Not a valid location')
+
+                events = []
+                suburbs = []
+
+                for suburb in Suburbs.query.all():
+                    distance = search_georange(location, suburb.name, suburb.postcode)
+                    if float(distance) <= search_range:
+                        suburbs.append(suburb)
+
+                for event in Events.query.filter_by(completed=False).all():
+                    if Suburbs.query.get(event.organisation.suburb_id) in suburbs:
+                        event_dict = {}
+                        event_dict['event_id'] = event.id
+                        event_dict['org_id'] = event.org_id
+                        event_dict['event_name'] = event.event_name
+                        event_dict['begin'] = event.dt_begin
+                        event_dict['end'] = event.dt_end
+                        event_dict['address'] = event.addr
+                        event_dict['desc'] = event.desc
+                        event_dict['org'] = event.organisation.name
+                        events.append(event_dict)
+                return render_template("Search.html", events=events)
     else:
-        search_range = 15.0
+        return render_template("Search.html", events=[])
 
-        location = geolocator.geocode(query)
-        if location == None:
-            return render_template("Search.html", error='Not a valid location')
-
-        events = []
-        suburbs = []
-
-        for suburb in Suburbs.query.all():
-            distance = search_georange(location, suburb.name, suburb.postcode)
-            if float(distance) <= search_range:
-                suburbs.append(suburb)
-
-        for event in Events.query.filter_by(completed=False).all():
-            if Suburbs.query.get(event.organisation.suburb_id) in suburbs:
-                event_dict = {}
-                event_dict['event_id'] = event.id
-                event_dict['org_id'] = event.org_id
-                event_dict['event_name'] = event.event_name
-                event_dict['begin'] = event.dt_begin
-                event_dict['end'] = event.dt_end
-                event_dict['address'] = event.addr
-                events.append(event_dict)
-        return render_template("Search.html", events=events)
 
 @app.route('/set_events', methods=['GET', 'POST'])
 def set_events():
